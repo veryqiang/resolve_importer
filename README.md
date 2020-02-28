@@ -1,4 +1,5 @@
-##Davinci Resolve Footage Importer
+## Davinci Resolve Footage Importer
+
 Tool for importing a folder containing sub-folders and footages to Davinci Resolve.
 Created with Davinci Resolve scripting API.
 
@@ -8,7 +9,7 @@ Created with Davinci Resolve scripting API.
 * User can select tag(s) to specify type of footage.
 
 
-#Run
+# Run
 GUI made with PySimpleGUI, which is easier GUI solution for new programmers.
 Make sure you have PySimpleGUI installed first:
     
