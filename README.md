@@ -7,6 +7,7 @@ Created with Davinci Resolve scripting API.
 * Automatic datetime stamp for the folder name.
 * Imports with/without folder structure.
 * User can select tag(s) to specify type of footage.
+* Option to create timeline from imported clips, useful for VFX review sessions.
 
 GUI made with PySimpleGUI, which is easier GUI solution for new programmers.
 Make sure you have PySimpleGUI installed first:
