@@ -45,9 +45,12 @@ def mp_add_VFX(fname, fpath,  afiles):
                     fileadded = ms.AddItemsToMediaPool(os.path.join(root, file))
                     print("Added file:", file)
             #if next folder exist, change to next folder
-            if folder_handles[i]:
-                mp.SetCurrentFolder(folder_handles[i])
-                i+=1
+            try:
+                if folder_handles[i]:
+                    mp.SetCurrentFolder(folder_handles[i])
+                    i+=1
+            except IndexError:
+                pass
 
 
 # Layout the design of the GUI
