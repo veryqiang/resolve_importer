@@ -12,7 +12,7 @@ GUI made with PySimpleGUI, which is easier GUI solution for new programmers.
 * User can select tag(s) to specify type of footage.
 * Option to create timeline from imported clips, useful for VFX review sessions.
 
-##How to run:
+## How to run:
 Make sure you have Python 3.6 or newer installed. 
 
 Then install PySimpleGUI:
