@@ -6,11 +6,16 @@ Created with Davinci Resolve scripting API.
 
 GUI made with PySimpleGUI, which is easier GUI solution for new programmers.
 
-* The importer creates a new folder at Media Pool's root, user can drag into other folders later.
-* Automatic datetime stamp for the folder name.
-* Imports with/without folder structure.
-* User can select tag(s) to specify type of footage.
-* Option to create timeline from imported clips, useful for VFX review sessions.
+## Goal
+
+The main goal of this importer, beside my learning to program, is to help keep a Resolve project tidy and maybe save some boring labor,
+by providing:
+
+* tagging/timestamp for folder names
+* clip color
+* marker labels
+
+There is also an option to create timeline from imported clips, useful for VFX review sessions.
 
 ## How to run:
 Make sure you have Python 3.6 or newer installed. 
