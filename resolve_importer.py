@@ -3,100 +3,14 @@ import os
 import DaVinciResolveScript as dvr
 import datetime
 
+import resolve_fun as rf
+
 # init Resolve handles
 resolve = dvr.scriptapp('Resolve')
 pm = resolve.GetProjectManager()
 proj = pm.GetCurrentProject()
 mp = proj.GetMediaPool()
 ms = resolve.GetMediaStorage()
-
-
-def mp_add_source(fpath, add_files_flag):
-    """add source clips to resolve's root folder;
-    Keyword Arguments:
-        fpath - footage folder path in OS
-        add_files_flag - if True,add folders and files;Fasle, add folder structure only;
-    """
-    folder_handles = []
-    i = 1
-
-    for root, dirs, files in os.walk(fpath):
-        # walk the folders
-        if dirs:
-            sub_temp = []
-            cf = mp.GetCurrentFolder()
-            # remember handle of current mediapool root
-            for dir in dirs:
-                sub_temp.append(mp.AddSubFolder(cf, dir))
-            mp.SetCurrentFolder(cf)
-            # AddSubFolder changes currentfolder to new added, return to cf
-            if add_files_flag:
-                for file in files:
-                    ms.AddItemsToMediaPool(os.path.join(root, file))
-            mp.SetCurrentFolder(sub_temp[0])
-            # change current folder to the next root folder os.walk() returns, which is sub_temp[0]
-            folder_handles.extend(sub_temp)
-            # store sub folders handles to the list
-        if not dirs:
-            # if subfolder does not exist, move on to the next folder in the folder_handles list
-
-            # add the files  first
-            if add_files_flag:
-                for file in files:
-                    ms.AddItemsToMediaPool(os.path.join(root, file))
-
-            # if next folder exist, change to next folder
-            try:
-                if folder_handles[i]:
-                    mp.SetCurrentFolder(folder_handles[i])
-                    i += 1
-            except IndexError:
-                pass
-
-
-def get_all_subfolders(mp_folder):
-    """return a list of all subfolders objects inside the provided folder object.
-    Keyword Arguments:
-        mp_folder - Resolve media pool folder object
-    """
-    folderlist = []
-    folderlist += mp_folder.GetSubFolders().values()
-    for sub_folder in mp_folder.GetSubFolders().values():
-        folderlist += get_all_subfolders(sub_folder)
-    return folderlist
-
-
-def make_timeline_with_folder(mp_folder, notes, timeline_notes_flag):
-    """make a timeline with all files inside the 'mp_folder' object;
-    Keyword Arguments:
-        mp_folder - Resolve media pool folder object
-    """
-    mp_folder_name = mp_folder.GetName()
-    # initial timeline and marker
-    new_timeline = mp.CreateTimelineFromClips(mp_folder_name, list(mp_folder.GetClips().values()))
-    if timeline_notes_flag:
-        new_timeline.AddMarker(new_timeline.GetEndFrame() - new_timeline.GetStartFrame(),
-                           'Green', mp_folder_name, notes, 1)
-    # work on the subfolders, add clips inside subfolder to timeline, and maker at the end
-    subfolder_list = get_all_subfolders(mp_folder)
-    for subfolder in subfolder_list:
-        clips_in_this_subfolder = []
-        for clip in subfolder.GetClips().values():
-            clips_in_this_subfolder.append(clip)
-        mp.AppendToTimeline(clips_in_this_subfolder)
-        if timeline_notes_flag:
-            new_timeline.AddMarker(new_timeline.GetEndFrame() - new_timeline.GetStartFrame(),
-                               'Green', subfolder.GetName(), notes, 1)
-
-
-def get_cliplist_in_folder(mp_folder):
-    """return a list containing all clips inside folder"""
-    cliplist = []
-    cliplist += mp_folder.GetClips().values()
-    subfolder_list = get_all_subfolders(mp_folder)
-    for subfolder in subfolder_list:
-        cliplist += subfolder.GetClips().values()
-    return cliplist
 
 
 def make_gui():
@@ -113,22 +27,22 @@ def make_gui():
          sg.Radio('Both', "RADIO1", key='FolderAndFiles', default=True),
          sg.Button('Browse', pad=(30, 10), font=('Default', 15), size=(6, 1), key='Import')]]
 
-    fram_timeline = [[sg.Checkbox('Timeline Notes', key='TIMELINENOTES',  pad=(0,10), default=False),
-                      sg.Checkbox('Create Timeline', key='TIMELINE', default=True, pad=((150,10),10))],
-                       [sg.InputText('Timeline notes...', text_color='pink', key='TNOTES', size=(48, 1),
-                                     pad=(5,(5,15)))]]
+    fram_timeline = [[sg.Checkbox('Timeline Notes', key='TIMELINENOTES', pad=(0, 10), default=False),
+                      sg.Checkbox('Create Timeline', key='TIMELINE', default=True, pad=((150, 10), 10))],
+                     [sg.InputText('Timeline notes...', text_color='pink', key='TNOTES', size=(48, 1),
+                                   pad=(5, (5, 15)))]]
 
-    frame_clips = [[sg.Checkbox('Clip Notes', key='CLIPNOTES',  pad=(0,10), default=False),
+    frame_clips = [[sg.Checkbox('Clip Notes', key='CLIPNOTES', pad=(0, 10), default=False),
                     sg.Combo(values=['Orange', 'Apricot', 'Yellow', 'Lime', 'Olive', 'Green', 'Teal', 'Navy', 'Blue',
-                                      'Purple', 'Violet', 'Pink', 'Tan', 'Beige', 'Brown', 'Chocolate'],
-                              default_value='Blue(Default)', key='CLIPCOLOR', size=(15,1),pad=((80,10),10)),
-                    sg.Text('Clip Color', pad=(0,10))],
-                    [sg.InputText('Clip notes...', text_color='pink', key='CNOTES', size=(48, 1), pad=(5,(5,15)))]]
+                                     'Purple', 'Violet', 'Pink', 'Tan', 'Beige', 'Brown', 'Chocolate'],
+                             default_value='Blue(Default)', key='CLIPCOLOR', size=(15, 1), pad=((80, 10), 10)),
+                    sg.Text('Clip Color', pad=(0, 10))],
+                   [sg.InputText('Clip notes...', text_color='pink', key='CNOTES', size=(48, 1), pad=(5, (5, 15)))]]
 
-    layout = [[sg.Frame('Import footage from folder', frame_import, font=('Default', 18), pad=(30, (15,0)))],
+    layout = [[sg.Frame('Import footage from folder', frame_import, font=('Default', 18), pad=(30, (15, 0)))],
               [sg.Frame('Clip options', frame_clips, font=('Default', 18), pad=(30, 10))],
               [sg.Frame('Timline options', fram_timeline, font=('Default', 18), pad=(30, 10))],
-              [sg.Cancel('Exit', size=(6,1), font=('Default', 15), pad=(30, 15))]]
+              [sg.Cancel('Exit', size=(6, 1), font=('Default', 15), pad=(30, 15))]]
 
     window = sg.Window('Resolve Import v0.2a', layout)
 
@@ -162,17 +76,17 @@ def make_gui():
                         add_files_flag = 0
                     else:
                         add_files_flag = 1
-                    mp_add_source(input_path, add_files_flag)
+                    rf.mp_add_source(input_path, add_files_flag, mp, ms)
 
-                for a_clip in get_cliplist_in_folder(imported_mp_folder):
+                for a_clip in rf.get_cliplist_in_folder(imported_mp_folder):
                     if values['CLIPNOTES']:
                         a_clip.AddMarker(0, 'Green', folder_name, values['CNOTES'], 1)
-                    if values['CLIPCOLOR']!='Blue(Default)':
+                    if values['CLIPCOLOR'] != 'Blue(Default)':
                         a_clip.SetClipColor(values['CLIPCOLOR'])
 
                 if values['TIMELINE']:
                     mp.SetCurrentFolder(imported_mp_folder)
-                    make_timeline_with_folder(imported_mp_folder, values['TNOTES'], values['TIMELINENOTES'])
+                    rf.make_timeline_with_folder(imported_mp_folder, values['TNOTES'], values['TIMELINENOTES'],mp)
 
                 sg.popup('done!')
 
