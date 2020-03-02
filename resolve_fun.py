@@ -1,5 +1,28 @@
 import os
 
+
+def get_cliplist_in_folder(mp_folder):
+    """return a list containing all clips inside folder"""
+    cliplist = []
+    cliplist += mp_folder.GetClips().values()
+    subfolder_list = get_all_subfolders(mp_folder)
+    for subfolder in subfolder_list:
+        cliplist += subfolder.GetClips().values()
+    return cliplist
+
+
+def get_all_subfolders(mp_folder):
+    """return a list of all subfolders objects inside the provided folder object.
+    Keyword Arguments:
+        mp_folder - Resolve media pool folder object
+    """
+    folderlist = []
+    folderlist += mp_folder.GetSubFolders().values()
+    for sub_folder in mp_folder.GetSubFolders().values():
+        folderlist += get_all_subfolders(sub_folder)
+    return folderlist
+
+
 def mp_add_source(fpath, add_files_flag, media_pool, media_storage):
     """add source clips to resolve's root folder;
     Keyword Arguments:
@@ -43,18 +66,6 @@ def mp_add_source(fpath, add_files_flag, media_pool, media_storage):
                 pass
 
 
-def get_all_subfolders(mp_folder):
-    """return a list of all subfolders objects inside the provided folder object.
-    Keyword Arguments:
-        mp_folder - Resolve media pool folder object
-    """
-    folderlist = []
-    folderlist += mp_folder.GetSubFolders().values()
-    for sub_folder in mp_folder.GetSubFolders().values():
-        folderlist += get_all_subfolders(sub_folder)
-    return folderlist
-
-
 def make_timeline_with_folder(mp_folder, notes, timeline_notes_flag, media_pool):
     """make a timeline with all files inside the 'mp_folder' object;
     Keyword Arguments:
@@ -62,11 +73,14 @@ def make_timeline_with_folder(mp_folder, notes, timeline_notes_flag, media_pool)
     """
     mp_folder_name = mp_folder.GetName()
     # initial timeline and marker
-    new_timeline = media_pool.CreateTimelineFromClips(mp_folder_name, list(mp_folder.GetClips().values()))
+    media_pool.SetCurrentFolder(media_pool.GetRootFolder())
+    new_timeline = media_pool.CreateEmptyTimeline(mp_folder_name)
+    media_pool.SetCurrentFolder(mp_folder)
+    media_pool.AppendToTimeline(list(mp_folder.GetClips().values()))
     if timeline_notes_flag:
         new_timeline.AddMarker(new_timeline.GetEndFrame() - new_timeline.GetStartFrame(),
-                           'Green', mp_folder_name, notes, 1)
-    # work on the subfolders, add clips inside subfolder to timeline, and maker at the end
+                               'Green', mp_folder_name, notes, 1)
+    # work on the subfolders, add clips inside subfolder to timeline, and marker at the end
     subfolder_list = get_all_subfolders(mp_folder)
     for subfolder in subfolder_list:
         clips_in_this_subfolder = []
@@ -75,14 +89,20 @@ def make_timeline_with_folder(mp_folder, notes, timeline_notes_flag, media_pool)
         media_pool.AppendToTimeline(clips_in_this_subfolder)
         if timeline_notes_flag:
             new_timeline.AddMarker(new_timeline.GetEndFrame() - new_timeline.GetStartFrame(),
-                               'Green', subfolder.GetName(), notes, 1)
+                                   'Green', subfolder.GetName(), notes, 1)
+    return new_timeline
 
 
-def get_cliplist_in_folder(mp_folder):
-    """return a list containing all clips inside folder"""
-    cliplist = []
-    cliplist += mp_folder.GetClips().values()
-    subfolder_list = get_all_subfolders(mp_folder)
-    for subfolder in subfolder_list:
-        cliplist += subfolder.GetClips().values()
-    return cliplist
+def get_newest_renderjob_index(proj):
+    newest_index= max(k for k,v in proj.GetRenderJobs().items())
+    return newest_index
+
+
+def valid_video_track_count(timeline):
+    i=0
+    for track in range(1,int(timeline.GetTrackCount('video'))+1):
+        if timeline.GetItemsInTrack('video', track):
+            i+=1
+    return i
+
+

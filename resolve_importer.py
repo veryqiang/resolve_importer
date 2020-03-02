@@ -40,8 +40,8 @@ def make_gui():
                    [sg.InputText('Clip notes...', text_color='pink', key='CNOTES', size=(48, 1), pad=(5, (5, 15)))]]
 
     layout = [[sg.Frame('Import footage from folder', frame_import, font=('Default', 18), pad=(30, (15, 0)))],
-              [sg.Frame('Clip options', frame_clips, font=('Default', 18), pad=(30, 10))],
-              [sg.Frame('Timline options', fram_timeline, font=('Default', 18), pad=(30, 10))],
+              [sg.Frame('Clip options', frame_clips, font=('Default', 15), pad=(30, 10))],
+              [sg.Frame('Timline options', fram_timeline, font=('Default', 15), pad=(30, 10))],
               [sg.Cancel('Exit', size=(6, 1), font=('Default', 15), pad=(30, 15))]]
 
     window = sg.Window('Resolve Import v0.2a', layout)
@@ -60,15 +60,18 @@ def make_gui():
         elif event == "Import":
             input_path = sg.popup_get_folder('Footage path', font=("Helvetica", 16))
             if input_path:
+
                 # assemble the tags
                 checked_tags = [key for key, val in values.items() if (val and (key in tags))]
                 if not checked_tags:
                     checked_tags = ['untagged']
-                # add the very first folder in media pool
+
+                # add the 'root' folder to media pool, save its handle for use later
                 folder_name = f"{datetime.datetime.now():%Y%m%d_%H%M%S_}" + '_'.join(checked_tags) + '-' + \
                               os.path.split(input_path)[1]
                 imported_mp_folder = mp.AddSubFolder(mp.GetRootFolder(), folder_name)
-                # no folder structure
+
+                # first let's handle the importing of files/folders
                 if values['FileOnly']:
                     ms.AddItemsToMediaPool(input_path)
                 else:
@@ -78,15 +81,17 @@ def make_gui():
                         add_files_flag = 1
                     rf.mp_add_source(input_path, add_files_flag, mp, ms)
 
+                # then we hanle the clip colors/markers
                 for a_clip in rf.get_cliplist_in_folder(imported_mp_folder):
                     if values['CLIPNOTES']:
                         a_clip.AddMarker(0, 'Green', folder_name, values['CNOTES'], 1)
                     if values['CLIPCOLOR'] != 'Blue(Default)':
                         a_clip.SetClipColor(values['CLIPCOLOR'])
 
+                # now is time to present the timeline
                 if values['TIMELINE']:
                     mp.SetCurrentFolder(imported_mp_folder)
-                    rf.make_timeline_with_folder(imported_mp_folder, values['TNOTES'], values['TIMELINENOTES'],mp)
+                    rf.make_timeline_with_folder(imported_mp_folder, values['TNOTES'], values['TIMELINENOTES'], mp)
 
                 sg.popup('done!')
 
